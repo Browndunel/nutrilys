@@ -114,7 +114,7 @@ def test_derived_columns(run):
                 "compared_to_category": "en:hazelnut-spreads",
                 "ingredients_text": "sucre, huile de palme, noisettes",
                 "additives_n": 1,
-                "additives_tags": ["en:e322"],
+                "additives_tags": ["en:e322", "en:e322i"],
                 "ingredients_from_palm_oil_n": 1,
                 "sugars_100g": 56.3,
                 "salt_100g": 0.1,
@@ -130,7 +130,7 @@ def test_derived_columns(run):
     assert spread["food_group"] == "sugary-snacks"
     assert spread["food_subgroup"] == "sweets"
     assert spread["main_category"] == "hazelnut-spreads"
-    assert list(spread["additives"]) == ["E322"]
+    assert list(spread["additives"]) == ["E322", "E322i"]
     assert spread["n_additives"] == 1
     assert spread["has_palm_oil"]
     assert spread["has_ingredients"] and spread["has_nutrients"]

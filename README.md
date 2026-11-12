@@ -53,6 +53,15 @@ uv run python -m nutrilys.data.clean      # table de référence -> data/process
 
 Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque étape) et `docs/data_dictionary.md` (description de chaque colonne). Le notebook `notebooks/01_qualite_donnees.ipynb` présente ces résultats.
 
+## Analyses
+
+| Notebook | Contenu |
+|---|---|
+| `01_qualite_donnees` | Entonnoir de nettoyage, taux de remplissage, effectifs par objectif |
+| `02_qualite_nutritionnelle` | Nutri-Score, NOVA, croisement des deux, additifs, nutriments par rayon |
+
+Les notebooks s'ouvrent dans VS Code avec le kernel `.venv`. Les figures interactives sont enregistrées dans `reports/figures/`.
+
 Une fois l'extraction faite, le fichier brut `data/raw/food.parquet` peut être supprimé pour libérer de la place : il se retélécharge avec la première commande.
 
 Le téléchargement reprend là où il s'était arrêté en cas de coupure. Les fichiers déjà présents ne sont pas retéléchargés (option `--force` pour forcer).
@@ -90,8 +99,8 @@ nutrilys/
 |---|---|---|
 | 0 | Mise en place | Fait |
 | 1 | Acquisition des données | Fait |
-| 2 | Nettoyage et table de référence | En cours |
-| 3 | Qualité nutritionnelle | À faire |
+| 2 | Nettoyage et table de référence | Fait |
+| 3 | Qualité nutritionnelle | En cours |
 | 4 | Bio vs conventionnel | À faire |
 | 5 | Controverses | À faire |
 | 6 | Modèles baseline | À faire |

@@ -166,8 +166,9 @@ def build_products(
                 nova_group,
                 environmental_score_grade AS green_score_grade,
                 additives_n,
+                -- en:e322i -> E322i (seule la lettre E en majuscule)
                 list_transform(
-                    coalesce(additives_tags, []), lambda x: upper(replace(x, 'en:', ''))
+                    coalesce(additives_tags, []), lambda x: 'E' || replace(x, 'en:e', '')
                 ) AS additives,
                 ingredients_n,
                 ingredients_from_palm_oil_n,

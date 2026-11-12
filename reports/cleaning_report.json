@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T22:42:52",
+  "generated_at": "2026-11-12T23:11:38",
   "source": "off_products.parquet",
   "output": "products.parquet",
   "steps": [

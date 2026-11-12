@@ -46,9 +46,10 @@ uv run ruff check .
 ## Données
 
 ```bash
-uv run python -m nutrilys.data.download   # Open Food Facts (plusieurs Go) et RappelConso
+uv run python -m nutrilys.data.download   # Open Food Facts (plusieurs Go), RappelConso, additifs
 uv run python -m nutrilys.data.extract    # produits vendus en France -> data/interim/
 uv run python -m nutrilys.data.clean      # table de référence -> data/processed/products.parquet
+uv run python -m nutrilys.analysis.controversies   # additifs, rappels, produits signalés
 ```
 
 Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque étape) et `docs/data_dictionary.md` (description de chaque colonne). Le notebook `notebooks/01_qualite_donnees.ipynb` présente ces résultats.
@@ -59,10 +60,12 @@ Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque é
 |---|---|
 | `01_qualite_donnees` | Entonnoir de nettoyage, taux de remplissage, effectifs par objectif |
 | `02_qualite_nutritionnelle` | Nutri-Score, NOVA, croisement des deux, additifs, nutriments par rayon |
+| `03_bio_vs_conventionnel` | Bio contre conventionnel à catégorie égale : tests par sous-groupe, taux standardisés |
+| `04_controverses` | Cinq signaux de controverse, additifs à risque, rappels, marques |
 
 Les notebooks s'ouvrent dans VS Code avec le kernel `.venv`. Les figures interactives sont enregistrées dans `reports/figures/`.
 
-Une fois l'extraction faite, le fichier brut `data/raw/food.parquet` peut être supprimé pour libérer de la place : il se retélécharge avec la première commande.
+Une fois l'extraction faite, le fichier brut `data/raw/food.parquet` peut être supprimé pour libérer de la place : il se retélécharge avec la première commande. Pour ne télécharger qu'une source : `--only off`, `--only rappelconso` ou `--only additives`.
 
 Le téléchargement reprend là où il s'était arrêté en cas de coupure. Les fichiers déjà présents ne sont pas retéléchargés (option `--force` pour forcer).
 
@@ -91,7 +94,8 @@ nutrilys/
 ## Sources
 
 - [Open Food Facts](https://world.openfoodfacts.org/data), base de données sous licence ODbL.
-- RappelConso, EFSA OpenFoodTox, table Ciqual (ANSES).
+- [RappelConso](https://data.economie.gouv.fr/explore/dataset/rappelconso-v2-gtin-trie) (DGCCRF), rappels de produits avec code-barres.
+- Évaluations des additifs par l'EFSA et liste de l'ANSES, via la taxonomie des additifs d'Open Food Facts.
 
 ## Avancement
 
@@ -100,9 +104,9 @@ nutrilys/
 | 0 | Mise en place | Fait |
 | 1 | Acquisition des données | Fait |
 | 2 | Nettoyage et table de référence | Fait |
-| 3 | Qualité nutritionnelle | En cours |
-| 4 | Bio vs conventionnel | À faire |
-| 5 | Controverses | À faire |
+| 3 | Qualité nutritionnelle | Fait |
+| 4 | Bio vs conventionnel | Fait |
+| 5 | Controverses | En cours |
 | 6 | Modèles baseline | À faire |
 | 7 | Modèle transformer | À faire |
 | 8 | Web app | À faire |

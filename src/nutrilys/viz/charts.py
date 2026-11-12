@@ -6,8 +6,9 @@ Le titre énonce le constat ; il est fourni par l'appelant, qui connaît les chi
 
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-from nutrilys.viz.theme import INK_SECONDARY, PRIMARY
+from nutrilys.viz.theme import AXIS, INK_SECONDARY, PRIMARY, SURFACE
 
 
 def _title(title: str, subtitle: str | None) -> dict:
@@ -110,16 +111,25 @@ def ranked_bars(
     value_format: str = ".1f",
     suffix: str = "",
     color: str = PRIMARY,
+    text: str | None = None,
 ) -> go.Figure:
-    """Barres horizontales triées, une seule série (classements)."""
+    """Barres horizontales triées, une seule série (classements).
+
+    text : colonne d'étiquettes déjà formatées ; à défaut, la valeur formatée.
+    """
     data = df.sort_values(value, ascending=True)
+    labels = (
+        data[text].tolist()
+        if text
+        else [f"{v:{value_format}}".replace(".", ",") + suffix for v in data[value]]
+    )
     fig = go.Figure(
         go.Bar(
             y=data[label],
             x=data[value],
             orientation="h",
             marker_color=color,
-            text=[f"{v:{value_format}}".replace(".", ",") + suffix for v in data[value]],
+            text=labels,
             textposition="outside",
             textfont=dict(color=INK_SECONDARY),
             hovertemplate=f"%{{y}}<br>%{{x:{value_format}}}{suffix}<extra></extra>",
@@ -133,4 +143,108 @@ def ranked_bars(
     )
     fig.update_xaxes(title_text=value_label, rangemode="tozero")
     fig.update_yaxes(showgrid=False)
+    return fig
+
+
+def dumbbell_panels(
+    df: pd.DataFrame,
+    label: str,
+    panels: list[tuple[str, str, str]],
+    names: tuple[str, str],
+    colors: tuple[str, str],
+    title: str = "",
+    subtitle: str | None = None,
+    suffix: str = " %",
+) -> go.Figure:
+    """Haltères côte à côte : deux valeurs par ligne, un panneau par calcul.
+
+    panels : liste de (titre du panneau, colonne de la 1re série, colonne de la 2e).
+    """
+    fig = make_subplots(
+        rows=1,
+        cols=len(panels),
+        shared_yaxes=True,
+        subplot_titles=[p[0] for p in panels],
+        horizontal_spacing=0.06,
+    )
+    y = df[label].tolist()
+    for col, (_, first, second) in enumerate(panels, start=1):
+        for _, row in df.iterrows():
+            fig.add_scatter(
+                x=[row[first], row[second]],
+                y=[row[label]] * 2,
+                mode="lines",
+                line=dict(color=AXIS, width=2),
+                hoverinfo="skip",
+                showlegend=False,
+                row=1,
+                col=col,
+            )
+        for column, name, color in ((first, names[0], colors[0]), (second, names[1], colors[1])):
+            fig.add_scatter(
+                x=df[column],
+                y=y,
+                mode="markers+text",
+                name=name,
+                marker=dict(color=color, size=12, line=dict(color=SURFACE, width=2)),
+                text=[f"{v:.0f}" for v in df[column]],
+                textposition="top center",
+                textfont=dict(color=INK_SECONDARY, size=11),
+                hovertemplate=f"%{{y}}<br>{name} : %{{x:.1f}}{suffix}<extra></extra>",
+                legendgroup=name,
+                showlegend=col == 1,
+                row=1,
+                col=col,
+            )
+        fig.update_xaxes(ticksuffix=suffix, rangemode="tozero", row=1, col=col)
+    for annotation in fig.layout.annotations:
+        annotation.update(font=dict(color=INK_SECONDARY, size=13), x=annotation.x)
+    fig.update_yaxes(autorange="reversed", showgrid=False)
+    fig.update_layout(
+        title=_title(title, subtitle),
+        height=max(380, 190 + 60 * len(df)),
+        margin=dict(t=120, b=70),
+        # Légende sous le graphique : au-dessus, elle gênerait les titres des panneaux
+        legend=dict(y=-0.12, yanchor="top", x=0.5, xanchor="center"),
+    )
+    return fig
+
+
+def effect_dots(
+    df: pd.DataFrame,
+    label: str,
+    effect: str,
+    category: str,
+    colors: dict,
+    title: str = "",
+    subtitle: str | None = None,
+    hover: str | None = None,
+    x_title: str = "Taille d'effet",
+) -> go.Figure:
+    """Une taille d'effet par ligne, centrée sur zéro, colorée par verdict."""
+    data = df.sort_values(effect)
+    fig = go.Figure()
+    for cat, color in colors.items():
+        sub = data[data[category] == cat]
+        if sub.empty:
+            continue
+        fig.add_scatter(
+            x=sub[effect],
+            y=sub[label],
+            mode="markers",
+            name=cat,
+            marker=dict(color=color, size=11, line=dict(color=SURFACE, width=2)),
+            customdata=sub[hover] if hover else None,
+            hovertemplate="%{y}<br>effet : %{x:.2f}"
+            + ("<br>%{customdata}" if hover else "")
+            + "<extra></extra>",
+        )
+    fig.add_vline(x=0, line=dict(color=AXIS, width=1.5))
+    fig.update_xaxes(range=[-1.05, 1.05], title_text=x_title, zeroline=False)
+    fig.update_yaxes(showgrid=True, categoryorder="array", categoryarray=data[label].tolist())
+    fig.update_layout(
+        title=_title(title, subtitle),
+        height=max(360, 150 + 26 * len(data)),
+        margin=dict(t=125),
+    )
     return fig

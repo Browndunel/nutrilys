@@ -30,6 +30,19 @@ RAPPELCONSO_URL = (
 )
 RAPPELCONSO_RAW_PATH = RAW_DIR / "rappelconso.parquet"
 
+# Taxonomie des additifs d'Open Food Facts (noms, évaluations EFSA, liste ANSES)
+ADDITIVES_TAXONOMY_URL = "https://static.openfoodfacts.org/data/taxonomies/additives.json"
+ADDITIVES_RAW_PATH = RAW_DIR / "additives_taxonomy.json"
+
+# Tables dérivées de l'étape 5
+ADDITIVES_PATH = PROCESSED_DIR / "additives.parquet"
+RECALLS_PATH = PROCESSED_DIR / "recalls.parquet"
+CONTROVERSIES_PATH = PROCESSED_DIR / "controversies.parquet"
+
+# Seuils des signaux de controverse
+MANY_ADDITIVES = 5  # « beaucoup d'additifs » à partir de ce nombre
+MIN_BRAND_PRODUCTS = 30  # produits notés minimum pour classer une marque
+
 # Nutriments extraits, valeurs pour 100 g
 NUTRIENTS = [
     "energy-kcal",

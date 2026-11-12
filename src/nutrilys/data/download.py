@@ -1,8 +1,8 @@
-"""Téléchargement des données brutes : Open Food Facts et RappelConso.
+"""Téléchargement des données brutes : Open Food Facts, RappelConso, additifs.
 
 Usage :
     uv run python -m nutrilys.data.download
-    uv run python -m nutrilys.data.download --only off --force
+    uv run python -m nutrilys.data.download --only additives
 """
 
 import argparse
@@ -42,28 +42,38 @@ def download_off(force: bool = False) -> Path:
     return path
 
 
-def download_rappelconso(force: bool = False) -> Path:
-    """Télécharge l'export complet de RappelConso V2 au format Parquet."""
-    dest = config.RAPPELCONSO_RAW_PATH
+def _download_url(url: str, dest: Path, name: str, force: bool) -> Path:
+    """Téléchargement simple d'un fichier, écrit d'abord sous un nom temporaire."""
     if dest.exists() and not force:
-        logger.info("RappelConso déjà présent : %s (%.1f Mo)", dest, _size_mb(dest))
+        logger.info("%s déjà présent : %s (%.1f Mo)", name, dest, _size_mb(dest))
         return dest
 
-    logger.info("Téléchargement de RappelConso...")
+    logger.info("Téléchargement de %s...", name)
     tmp = dest.with_suffix(".part")
-    with (
-        urllib.request.urlopen(config.RAPPELCONSO_URL, timeout=120) as response,
-        tmp.open("wb") as f,
-    ):
+    with urllib.request.urlopen(url, timeout=120) as response, tmp.open("wb") as f:
         shutil.copyfileobj(response, f)
     tmp.replace(dest)
-    logger.info("RappelConso téléchargé : %s (%.1f Mo)", dest, _size_mb(dest))
+    logger.info("%s téléchargé : %s (%.1f Mo)", name, dest, _size_mb(dest))
     return dest
+
+
+def download_rappelconso(force: bool = False) -> Path:
+    """Export complet de RappelConso V2 au format Parquet."""
+    return _download_url(config.RAPPELCONSO_URL, config.RAPPELCONSO_RAW_PATH, "RappelConso", force)
+
+
+def download_additives(force: bool = False) -> Path:
+    """Taxonomie des additifs d'Open Food Facts (JSON, moins de 1 Mo)."""
+    return _download_url(
+        config.ADDITIVES_TAXONOMY_URL, config.ADDITIVES_RAW_PATH, "Taxonomie des additifs", force
+    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Télécharge les données brutes du projet.")
-    parser.add_argument("--only", choices=["off", "rappelconso"], help="une seule source")
+    parser.add_argument(
+        "--only", choices=["off", "rappelconso", "additives"], help="une seule source"
+    )
     parser.add_argument("--force", action="store_true", help="retélécharge même si présent")
     args = parser.parse_args()
 
@@ -77,6 +87,8 @@ def main() -> None:
         download_off(force=args.force)
     if args.only in (None, "rappelconso"):
         download_rappelconso(force=args.force)
+    if args.only in (None, "additives"):
+        download_additives(force=args.force)
 
 
 if __name__ == "__main__":

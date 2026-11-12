@@ -11,10 +11,10 @@ import argparse
 import logging
 from pathlib import Path
 
-import duckdb
 import pandas as pd
 
 from nutrilys import config
+from nutrilys.db import connect, sql_path
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def build_extract_query(source: Path, countries: list[str]) -> str:
     return (
         "SELECT\n    "
         + ",\n    ".join(columns)
-        + f"\nFROM read_parquet('{source.as_posix()}')"
+        + f"\nFROM read_parquet('{sql_path(source)}')"
         + f"\nWHERE list_has_any(countries_tags, {countries_sql})"
         + "\n  AND coalesce(obsolete, false) = false"
     )
@@ -93,12 +93,9 @@ def extract_off(
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     query = build_extract_query(source, countries)
-    with duckdb.connect() as con:
-        con.execute(f"SET memory_limit = '{config.DUCKDB_MEMORY_LIMIT}'")
-        con.execute(f"SET threads = {config.DUCKDB_THREADS}")
-        con.execute("SET preserve_insertion_order = false")
-        con.execute(f"COPY ({query}) TO '{dest.as_posix()}' (FORMAT parquet, COMPRESSION zstd)")
-        count_query = f"SELECT count(*) FROM read_parquet('{dest.as_posix()}')"
+    with connect() as con:
+        con.execute(f"COPY ({query}) TO '{sql_path(dest)}' (FORMAT parquet, COMPRESSION zstd)")
+        count_query = f"SELECT count(*) FROM read_parquet('{sql_path(dest)}')"
         n_rows = con.execute(count_query).fetchone()[0]
 
     logger.info("Extrait écrit : %s (%d produits, pays : %s)", dest, n_rows, ", ".join(countries))
@@ -120,8 +117,8 @@ def summarize(path: Path = config.OFF_INTERIM_PATH) -> pd.DataFrame:
         "saturated_fat_100g",
     ]
     exprs = ", ".join(f"round(100 * avg(({c} IS NOT NULL)::int), 1) AS {c}" for c in key_columns)
-    with duckdb.connect() as con:
-        row = con.execute(f"SELECT {exprs} FROM read_parquet('{path.as_posix()}')").df()
+    with connect() as con:
+        row = con.execute(f"SELECT {exprs} FROM read_parquet('{sql_path(path)}')").df()
     return row.T.rename(columns={0: "rempli_%"})
 
 

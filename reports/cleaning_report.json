@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-11-12T22:42:52",
+  "source": "off_products.parquet",
+  "output": "products.parquet",
+  "steps": [
+    {
+      "step": "Extrait France",
+      "rows": 1296967
+    },
+    {
+      "step": "Un produit par code-barres",
+      "rows": 1296939
+    },
+    {
+      "step": "Avec un nom de produit",
+      "rows": 1171729
+    },
+    {
+      "step": "Table de référence",
+      "rows": 1171729
+    }
+  ],
+  "invalid_scores_set_to_null": {
+    "nutriscore_grade": 697575,
+    "nova_group": 0
+  },
+  "nutrient_values_set_to_null": {
+    "energy_kcal_100g": 784,
+    "fat_100g": 37,
+    "saturated_fat_100g": 182,
+    "carbohydrates_100g": 79,
+    "sugars_100g": 390,
+    "fiber_100g": 39,
+    "proteins_100g": 26,
+    "salt_100g": 42
+  }
+}

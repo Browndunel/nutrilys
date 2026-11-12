@@ -68,6 +68,9 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # Les bibliothèques HTTP journalisent chaque requête : on ne garde que les avertissements
+    for name in ("httpx", "httpx2", "huggingface_hub"):
+        logging.getLogger(name).setLevel(logging.WARNING)
     config.ensure_dirs()
 
     if args.only in (None, "off"):

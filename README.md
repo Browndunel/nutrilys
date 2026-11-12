@@ -48,7 +48,12 @@ uv run ruff check .
 ```bash
 uv run python -m nutrilys.data.download   # Open Food Facts (plusieurs Go) et RappelConso
 uv run python -m nutrilys.data.extract    # produits vendus en France -> data/interim/
+uv run python -m nutrilys.data.clean      # table de référence -> data/processed/products.parquet
 ```
+
+Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque étape) et `docs/data_dictionary.md` (description de chaque colonne). Le notebook `notebooks/01_qualite_donnees.ipynb` présente ces résultats.
+
+Une fois l'extraction faite, le fichier brut `data/raw/food.parquet` peut être supprimé pour libérer de la place : il se retélécharge avec la première commande.
 
 Le téléchargement reprend là où il s'était arrêté en cas de coupure. Les fichiers déjà présents ne sont pas retéléchargés (option `--force` pour forcer).
 
@@ -60,6 +65,7 @@ nutrilys/
 │   ├── raw/               # exports bruts, jamais modifiés
 │   ├── interim/           # extraits filtrés
 │   └── processed/         # tables finales
+├── docs/                  # dictionnaire de données
 ├── notebooks/             # un notebook par étape d'analyse
 ├── src/nutrilys/
 │   ├── config.py          # chemins et paramètres
@@ -83,8 +89,8 @@ nutrilys/
 | Étape | Contenu | Statut |
 |---|---|---|
 | 0 | Mise en place | Fait |
-| 1 | Acquisition des données | En cours |
-| 2 | Nettoyage et table de référence | À faire |
+| 1 | Acquisition des données | Fait |
+| 2 | Nettoyage et table de référence | En cours |
 | 3 | Qualité nutritionnelle | À faire |
 | 4 | Bio vs conventionnel | À faire |
 | 5 | Controverses | À faire |

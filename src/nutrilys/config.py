@@ -11,7 +11,11 @@ INTERIM_DIR = DATA_DIR / "interim"
 PROCESSED_DIR = DATA_DIR / "processed"
 
 MODELS_DIR = ROOT_DIR / "models"
-FIGURES_DIR = ROOT_DIR / "reports" / "figures"
+REPORTS_DIR = ROOT_DIR / "reports"
+FIGURES_DIR = REPORTS_DIR / "figures"
+
+PRODUCTS_PATH = PROCESSED_DIR / "products.parquet"
+CLEANING_REPORT_PATH = REPORTS_DIR / "cleaning_report.json"
 
 # Source Open Food Facts (export Parquet publié sur Hugging Face)
 OFF_HF_REPO = "openfoodfacts/product-database"
@@ -37,6 +41,15 @@ NUTRIENTS = [
     "proteins",
     "salt",
 ]
+
+# Bornes de validité des nutriments (pour 100 g). Hors bornes, la valeur est mise à vide.
+NUTRIENT_MAX_100G = {"energy_kcal_100g": 900.0}  # 900 kcal : graisse pure
+DEFAULT_NUTRIENT_MAX_100G = 100.0
+# Tolérance d'arrondi pour les règles « sous-total <= total » (graisses saturées <= graisses)
+NUTRIENT_TOLERANCE_G = 1.0
+
+# Valeurs valides des scores
+GREEN_SCORE_GRADES = ["a-plus", "a", "b", "c", "d", "e", "f"]
 
 # Ressources allouées à DuckDB (à ajuster selon la mémoire de la machine)
 DUCKDB_MEMORY_LIMIT = "4GB"
@@ -66,5 +79,5 @@ VALID_SIZE = 0.15
 
 def ensure_dirs() -> None:
     """Crée les dossiers de travail s'ils n'existent pas."""
-    for path in (RAW_DIR, INTERIM_DIR, PROCESSED_DIR, MODELS_DIR, FIGURES_DIR):
+    for path in (RAW_DIR, INTERIM_DIR, PROCESSED_DIR, MODELS_DIR, REPORTS_DIR, FIGURES_DIR):
         path.mkdir(parents=True, exist_ok=True)

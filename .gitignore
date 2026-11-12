@@ -1,0 +1,25 @@
+# Environnement
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Données et modèles (régénérés par les scripts)
+data/raw/*
+data/interim/*
+data/processed/*
+models/*
+!data/**/.gitkeep
+!models/.gitkeep
+
+# Secrets
+.env
+.streamlit/secrets.toml
+
+# Système
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

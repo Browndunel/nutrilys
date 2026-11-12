@@ -54,6 +54,25 @@ def test_detect_recall_columns():
         detect_columns(["motif", "date"])
 
 
+@pytest.mark.parametrize(
+    ("reason", "theme"),
+    [
+        ("Teneur supérieure à la limite autorisée en oxyde d'éthylène", "Oxyde d'éthylène"),
+        ("Présence de Listeria monocytogenes", "Listeria"),
+        ("Rupture de la chaîne du froid", "Chaîne du froid"),
+        ("Présence de lait non mentionné sur l'étiquette", "Allergène non déclaré"),
+        ("Présence de morceaux de verre", "Corps étranger"),
+        ("Teneur en aflatoxines supérieure à la limite", "Pesticides et contaminants chimiques"),
+        ("Défaut d'emballage", "Autre motif"),
+        (None, None),
+    ],
+)
+def test_recall_theme(reason, theme):
+    from nutrilys.data.recalls import recall_theme
+
+    assert recall_theme(reason) == theme
+
+
 def test_gtin_key():
     assert gtin_key("03017620422003") == ["3017620422003"]
     assert gtin_key("3017620422003 3017620425035") == ["3017620422003", "3017620425035"]
@@ -73,6 +92,7 @@ def test_build_recalls_keeps_latest_per_code(tmp_path):
     df = build_recalls(source, tmp_path / "recalls.parquet").set_index("gtin_key")
     assert len(df) == 2
     assert df.loc["123456789012", "recall_reason"] == "Listeria"
+    assert df.loc["123456789012", "recall_theme"] == "Listeria"
 
 
 @pytest.fixture
@@ -105,6 +125,7 @@ def refs():
             "gtin_key": ["123456789012"],
             "recall_date": [pd.Timestamp("2025-06-01")],
             "recall_reason": ["Présence de Listeria"],
+            "recall_theme": ["Listeria"],
             "recall_risk": [None],
             "recall_category": [None],
             "recall_brand": [None],
@@ -130,7 +151,7 @@ def test_signals_and_explanations(con, refs):
 
     recalled = signals.loc["123456789012"]
     assert recalled["recalled"] and recalled["controversy_score"] == 1
-    assert recalled["reasons"] == "Rappelé le 01/06/2025 (Présence de Listeria)."
+    assert recalled["reasons"] == "Rappelé le 01/06/2025 (listeria)."
 
     counts = ctv.signal_counts(signals.reset_index()).set_index("signal")
     assert counts.loc["recalled", "products"] == 1

@@ -63,7 +63,7 @@ def compute_signals(con, additives: pd.DataFrame, recalls: pd.DataFrame) -> pd.D
                 p.code, p.product_name, p.brand, p.brand_tag, p.food_group, p.food_subgroup,
                 p.nutriscore_grade, p.nova_group, p.n_additives, p.is_organic, p.n_scans,
                 coalesce(r.risky_additive_names, []) AS risky_additive_names,
-                rc.recall_date, rc.recall_reason, rc.recall_risk, rc.recall_link,
+                rc.recall_date, rc.recall_reason, rc.recall_theme, rc.recall_risk, rc.recall_link,
                 coalesce(p.nutriscore_grade IN ('a', 'b') AND p.nova_group = 4, false)
                     AS good_score_ultra,
                 coalesce(p.nutriscore_grade IN ('a', 'b') AND p.n_additives >= {many}, false)
@@ -101,8 +101,14 @@ def explain(row: pd.Series) -> str:
     if row["recalled"]:
         date = row.get("recall_date")
         when = f" le {date:%d/%m/%Y}" if pd.notna(date) else ""
-        reason = row.get("recall_reason")
-        detail = f" ({str(reason).strip()[:80]})" if isinstance(reason, str) and reason else ""
+        # Famille du motif si elle est reconnue, sinon début du motif tel quel
+        theme, reason = row.get("recall_theme"), row.get("recall_reason")
+        if isinstance(theme, str) and theme != "Autre motif":
+            detail = f" ({theme.lower() if theme != 'E. coli' else theme})"
+        elif isinstance(reason, str) and reason.strip():
+            detail = f" ({reason.strip()[:80]})"
+        else:
+            detail = ""
         parts.append(f"rappelé{when}{detail}")
     if row["organic_ultra"]:
         parts.append("bio mais ultra-transformé (NOVA 4)")

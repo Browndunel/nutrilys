@@ -33,6 +33,32 @@ COLUMN_KEYWORDS = {
 EXCLUDED = {"brand": ["salubrite"], "category": ["sous_categorie"], "link": ["affichette", "image"]}
 REQUIRED = ("gtin",)
 
+# Familles de motifs de rappel : (famille, mots-clés sans accents). Premier trouvé retenu,
+# l'ordre compte (l'oxyde d'éthylène avant les autres contaminants, par exemple).
+RECALL_THEMES = [
+    ("Oxyde d'éthylène", ["oxyde d", "ethylene"]),
+    ("Listeria", ["listeria"]),
+    ("Salmonelle", ["salmonel"]),
+    ("E. coli", ["coli", "stec"]),
+    (
+        "Autre contamination microbiologique",
+        ["moisissure", "bacill", "clostridium", "botulin", "staphylo", "microbio", "bacteri",
+         "levure", "norovirus", "hepatite", "germe"],
+    ),
+    ("Chaîne du froid", ["chaine du froid", "temperature"]),
+    (
+        "Allergène non déclaré",
+        ["allergen", "allergie", "non mentionne", "non declare", "gluten", "arachide"],
+    ),
+    ("Corps étranger", ["corps etranger", "morceau", "verre", "metal", "plastique", "particule"]),
+    (
+        "Pesticides et contaminants chimiques",
+        ["pesticide", "residu", "mycotoxine", "aflatoxine", "ochratoxine", "plomb", "cadmium",
+         "mercure", "dioxine", "teneur superieure", "limite maximale", "limite autorisee"],
+    ),
+    ("Étiquetage", ["etiquet", "dlc", "date limite"]),
+]  # fmt: skip
+
 
 def _normalize(name: str) -> str:
     """Nom de colonne sans accents, en minuscules, espaces remplacés par _."""
@@ -66,6 +92,17 @@ def detect_columns(columns: list[str]) -> dict[str, str]:
     return found
 
 
+def recall_theme(reason) -> str | None:
+    """Famille du motif de rappel, d'après des mots-clés."""
+    if not isinstance(reason, str) or not reason.strip():
+        return None
+    text = _normalize(reason).replace("_", " ")
+    for theme, keywords in RECALL_THEMES:
+        if any(k in text for k in keywords):
+            return theme
+    return "Autre motif"
+
+
 def gtin_key(value) -> list[str]:
     """Codes-barres d'une cellule, réduits aux chiffres et sans zéros de tête."""
     if value is None or (isinstance(value, float) and pd.isna(value)):
@@ -97,7 +134,8 @@ def build_recalls(
     for role in COLUMN_KEYWORDS:
         if role != "gtin" and role not in df:
             df[role] = None
-    df = df[["gtin_key", "date", "reason", "risk", "category", "brand", "label", "link"]]
+    df["theme"] = df["reason"].map(recall_theme)
+    df = df[["gtin_key", "date", "reason", "theme", "risk", "category", "brand", "label", "link"]]
     df.columns = ["gtin_key"] + [f"recall_{c}" for c in df.columns[1:]]
 
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -112,6 +150,8 @@ def main() -> None:
     print(f"\n{len(df)} codes-barres rappelés")
     if df["recall_date"].notna().any():
         print(f"Période : {df['recall_date'].min():%d/%m/%Y} - {df['recall_date'].max():%d/%m/%Y}")
+    print("\nFamilles de motifs :")
+    print(df["recall_theme"].fillna("Motif absent").value_counts().to_string())
 
 
 if __name__ == "__main__":

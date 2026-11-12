@@ -43,6 +43,15 @@ uv run pytest
 uv run ruff check .
 ```
 
+## Données
+
+```bash
+uv run python -m nutrilys.data.download   # Open Food Facts (plusieurs Go) et RappelConso
+uv run python -m nutrilys.data.extract    # produits vendus en France -> data/interim/
+```
+
+Le téléchargement reprend là où il s'était arrêté en cas de coupure. Les fichiers déjà présents ne sont pas retéléchargés (option `--force` pour forcer).
+
 ## Structure
 
 ```
@@ -74,7 +83,7 @@ nutrilys/
 | Étape | Contenu | Statut |
 |---|---|---|
 | 0 | Mise en place | Fait |
-| 1 | Acquisition des données | À faire |
+| 1 | Acquisition des données | En cours |
 | 2 | Nettoyage et table de référence | À faire |
 | 3 | Qualité nutritionnelle | À faire |
 | 4 | Bio vs conventionnel | À faire |

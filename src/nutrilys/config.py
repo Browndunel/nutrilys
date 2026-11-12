@@ -17,6 +17,30 @@ FIGURES_DIR = ROOT_DIR / "reports" / "figures"
 OFF_HF_REPO = "openfoodfacts/product-database"
 OFF_HF_FILE = "food.parquet"
 OFF_RAW_PATH = RAW_DIR / OFF_HF_FILE
+OFF_INTERIM_PATH = INTERIM_DIR / "off_products.parquet"
+
+# Source RappelConso V2 (rappels de produits, un code-barres par ligne)
+RAPPELCONSO_URL = (
+    "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/"
+    "rappelconso-v2-gtin-trie/exports/parquet"
+)
+RAPPELCONSO_RAW_PATH = RAW_DIR / "rappelconso.parquet"
+
+# Nutriments extraits, valeurs pour 100 g
+NUTRIENTS = [
+    "energy-kcal",
+    "fat",
+    "saturated-fat",
+    "carbohydrates",
+    "sugars",
+    "fiber",
+    "proteins",
+    "salt",
+]
+
+# Ressources allouées à DuckDB (à ajuster selon la mémoire de la machine)
+DUCKDB_MEMORY_LIMIT = "4GB"
+DUCKDB_THREADS = 4
 
 # Périmètre géographique (valeurs du champ countries_tags d'Open Food Facts)
 PHASE_1_COUNTRIES = ["en:france"]

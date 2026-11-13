@@ -44,10 +44,16 @@ SPLITS_PATH = PROCESSED_DIR / "splits.parquet"
 PREDICTIONS_DIR = PROCESSED_DIR / "predictions"
 MODEL_REPORTS_DIR = REPORTS_DIR / "models"
 NOVA_ESTIMATED_PATH = PREDICTIONS_DIR / "nova_estimated.parquet"
+COLAB_DIR = PROCESSED_DIR / "colab"  # données exportées pour l'étape 7 (Google Colab)
+TRANSFORMER_TASKS = ["nova_name", "nutriscore_text"]  # scénarios A uniquement
 TFIDF_MAX_FEATURES = 50_000
 TFIDF_MIN_DF = 5
 # XGBoost : seulement les termes les plus discriminants (chi²), 12 fois plus rapide
 XGB_TEXT_FEATURES = 5_000
+
+# Application (étape 8)
+APP_PRODUCTS_PATH = PROCESSED_DIR / "app_products.parquet"
+APP_PAGE_SIZE = 50
 
 # Seuils des signaux de controverse
 MANY_ADDITIVES = 5  # « beaucoup d'additifs » à partir de ce nombre

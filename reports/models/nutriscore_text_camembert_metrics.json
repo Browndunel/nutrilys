@@ -1,0 +1,27 @@
+{
+  "task": "nutriscore_text",
+  "model": "camembert",
+  "model_name": "cmarkea/distilcamembert-base",
+  "accuracy": 0.7153527783900276,
+  "balanced_accuracy": 0.707209364136533,
+  "f1_macro": 0.701068263035638,
+  "within_one": 0.9454362892758308,
+  "n_test": 40833,
+  "n_train": 99999,
+  "fit_seconds": 1384.0,
+  "predict_ms_per_1000": 1978.5,
+  "sample": 0,
+  "device": "Tesla T4",
+  "epochs": 2,
+  "max_length": 256,
+  "history": [
+    {
+      "epoch": 1,
+      "valid_f1_macro": 0.6774
+    },
+    {
+      "epoch": 2,
+      "valid_f1_macro": 0.6956
+    }
+  ]
+}

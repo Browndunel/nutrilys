@@ -42,7 +42,7 @@ NOVA_LABELS = {
 NUTRISCORE_TEXT = {"a": "#ffffff", "b": INK, "c": INK, "d": INK, "e": "#ffffff"}
 NOVA_TEXT = {1: "#ffffff", 2: INK, 3: "#ffffff", 4: "#ffffff"}
 
-FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+FONT = '"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
 TEMPLATE_NAME = "nutrilys"
 
 

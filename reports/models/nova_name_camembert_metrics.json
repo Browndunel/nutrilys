@@ -1,0 +1,27 @@
+{
+  "task": "nova_name",
+  "model": "camembert",
+  "model_name": "cmarkea/distilcamembert-base",
+  "accuracy": 0.8170627386342298,
+  "balanced_accuracy": 0.8631776453890697,
+  "f1_macro": 0.8262206428174705,
+  "within_one": 0.949070500114753,
+  "n_test": 47929,
+  "n_train": 223666,
+  "fit_seconds": 877.3,
+  "predict_ms_per_1000": 537.5,
+  "sample": 0,
+  "device": "Tesla T4",
+  "epochs": 2,
+  "max_length": 64,
+  "history": [
+    {
+      "epoch": 1,
+      "valid_f1_macro": 0.8183
+    },
+    {
+      "epoch": 2,
+      "valid_f1_macro": 0.8265
+    }
+  ]
+}

@@ -8,7 +8,8 @@ Pour chaque tâche (voir `dataset.TASKS`) et chaque modèle :
 Usage :
     uv run python -m nutrilys.models.baseline --sample 50000     # essai rapide
     uv run python -m nutrilys.models.baseline --models lr        # régression logistique, tout
-    uv run python -m nutrilys.models.baseline --tasks nova_full nutriscore_full --models xgb
+    uv run python -m nutrilys.models.baseline --tasks nova_full nutriscore_full --models xgb \
+        --max-train 50000
 
 XGBoost n'est utile que pour les scénarios de contrôle (B), où il retrouve les règles
 de calcul par seuils ; sur le texte seul, la régression logistique fait aussi bien,
@@ -202,6 +203,25 @@ def predict_products(con, fitted: FittedModel, where: str) -> pd.DataFrame:
     )
 
 
+def explain_prediction(fitted: FittedModel, df: pd.DataFrame, n: int = 6) -> pd.DataFrame:
+    """Termes du texte qui ont le plus poussé vers la classe prédite (régression logistique).
+
+    Contribution d'un terme = poids TF-IDF du terme dans le texte x coefficient du modèle
+    pour la classe prédite. Ne concerne que la première ligne de `df`.
+    """
+    if fitted.model != "lr":
+        raise ValueError("Disponible seulement pour la régression logistique.")
+    x = fitted.vectorizer.transform(df["text"].iloc[:1])
+    k = int(fitted.predict_proba(df.iloc[:1]).argmax(axis=1)[0])
+    names = fitted.vectorizer.get_feature_names_out()
+    coefs = fitted.classifier.coef_[k, : len(names)]
+    idx = x.indices
+    contrib = x.data * coefs[idx]
+    order = np.argsort(contrib)[::-1][:n]
+    out = pd.DataFrame({"term": names[idx[order]], "contribution": contrib[order]})
+    return out[out["contribution"] > 0].reset_index(drop=True)
+
+
 def best_model(metrics: pd.DataFrame, task: str) -> str:
     """Modèle de meilleur F1 macro pour une tâche."""
     rows = metrics[metrics["task"] == task].sort_values("f1_macro")
@@ -229,8 +249,28 @@ def model_path(task: str, model: str) -> Path:
     return config.MODELS_DIR / f"{task}_{model}.joblib"
 
 
-def run(tasks: list[str], models: list[str], sample: int | None = None) -> pd.DataFrame:
-    """Entraîne et évalue chaque combinaison, enregistre modèles, prédictions et métriques."""
+def limit_train(train: pd.DataFrame, max_train: int | None) -> pd.DataFrame:
+    """Sous-échantillon stratifié du jeu d'entraînement (validation et test inchangés)."""
+    if not max_train or len(train) <= max_train:
+        return train
+    frac = max_train / len(train)
+    return train.groupby("target", group_keys=False).sample(
+        frac=frac, random_state=config.RANDOM_SEED
+    )
+
+
+def run(
+    tasks: list[str],
+    models: list[str],
+    sample: int | None = None,
+    max_train: int | None = None,
+) -> pd.DataFrame:
+    """Entraîne et évalue chaque combinaison, enregistre modèles, prédictions et métriques.
+
+    sample : réduit toute la population (essai rapide, jeu de test différent).
+    max_train : réduit seulement l'entraînement ; le jeu de test reste le jeu complet,
+    donc les résultats restent comparables à ceux des autres modèles.
+    """
     config.ensure_dirs()
     config.PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
     config.MODEL_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -246,10 +286,13 @@ def run(tasks: list[str], models: list[str], sample: int | None = None) -> pd.Da
             "%s : %d produits (train %d, valid %d, test %d)",
             name, len(df), len(parts["train"]), len(parts["valid"]), len(parts["test"]),
         )  # fmt: skip
+        train = limit_train(parts["train"], max_train)
+        if len(train) < len(parts["train"]):
+            logger.info("%s : entraînement limité à %d produits", name, len(train))
         for model in models:
-            fitted = fit(task, model, parts["train"], parts["valid"])
+            fitted = fit(task, model, train, parts["valid"])
             metrics, predictions = evaluate(fitted, parts["test"])
-            metrics["n_train"] = len(parts["train"])
+            metrics["n_train"] = len(train)
             metrics["sample"] = sample or 0
             joblib.dump(fitted, model_path(name, model), compress=3)
             predictions.to_parquet(config.PREDICTIONS_DIR / f"{name}_{model}.parquet", index=False)
@@ -280,7 +323,9 @@ def run(tasks: list[str], models: list[str], sample: int | None = None) -> pd.Da
         new = pd.concat([old[same_run & ~recomputed], new], ignore_index=True)
     new.to_csv(path, index=False)
     (config.MODEL_REPORTS_DIR / "baseline_run.json").write_text(
-        json.dumps({"sample": sample, "tasks": tasks, "models": models}, indent=2),
+        json.dumps(
+            {"sample": sample, "max_train": max_train, "tasks": tasks, "models": models}, indent=2
+        ),
         encoding="utf-8",
     )
     return new
@@ -291,13 +336,16 @@ def main() -> None:
     parser.add_argument("--tasks", nargs="+", choices=list(TASKS), default=list(TASKS))
     parser.add_argument("--models", nargs="+", choices=list(MODELS), default=list(MODELS))
     parser.add_argument("--sample", type=int, help="nombre de produits par tâche (essai rapide)")
+    parser.add_argument(
+        "--max-train", type=int, help="limite l'entraînement à N produits, test complet conservé"
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    metrics = run(args.tasks, args.models, args.sample)
+    metrics = run(args.tasks, args.models, args.sample, args.max_train)
     if "nova_name" in args.tasks:
         estimate_missing_nova(metrics)
-    columns = ["task", "model", "f1_macro", "accuracy", "within_one", "fit_seconds"]
+    columns = ["task", "model", "f1_macro", "accuracy", "within_one", "n_train", "fit_seconds"]
     print("\n" + metrics[columns].round(3).to_string(index=False))
 
 

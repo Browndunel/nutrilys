@@ -232,6 +232,8 @@ def standardized_rates(df: pd.DataFrame, indicator: str, min_per_arm: int = MIN_
     by = data.groupby([STRATUM, "is_organic"])[indicator].agg(["mean", "size"]).unstack()
     keep = (by["size"][True] >= min_per_arm) & (by["size"][False] >= min_per_arm)
     by = by[keep]
+    if by.empty:
+        raise ValueError(f"Aucun sous-groupe comparable pour {indicator}.")
     weights = by["size"][True] + by["size"][False]
     kept = data[data[STRATUM].isin(by.index)]
 

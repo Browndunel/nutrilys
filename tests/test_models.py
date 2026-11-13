@@ -200,3 +200,12 @@ def test_metrics_file_keeps_only_consistent_runs(con, tmp_path, monkeypatch):
 
     baseline.run(["nova_name"], ["xgb"])  # complément, mêmes conditions : conservé
     assert sorted(pd.read_csv(path)["model"]) == ["lr", "xgb"]
+
+
+def test_limit_train_keeps_class_balance():
+    train = pd.DataFrame({"target": [1] * 800 + [4] * 200, "code": range(1000)})
+    small = baseline.limit_train(train, 100)
+    assert len(small) == 100
+    assert (small["target"] == 4).mean() == pytest.approx(0.2)
+    assert baseline.limit_train(train, None) is train
+    assert baseline.limit_train(train, 5000) is train

@@ -57,12 +57,29 @@ uv run python -m nutrilys.analysis.controversies   # additifs, rappels, produits
 ```bash
 uv run python -m nutrilys.models.baseline --sample 50000   # essai rapide
 uv run python -m nutrilys.models.baseline --models lr      # régression logistique, 4 tâches
-uv run python -m nutrilys.models.baseline --tasks nova_full nutriscore_full --models xgb
+uv run python -m nutrilys.models.baseline --tasks nova_full nutriscore_full --models xgb --max-train 50000
 ```
 
-Quatre tâches (NOVA et Nutri-Score, chacun avec un scénario « texte seul » et un scénario de contrôle), deux modèles (TF-IDF + régression logistique, TF-IDF + XGBoost). XGBoost n'est entraîné que sur les scénarios de contrôle, seuls cas où il fait mieux que la régression logistique. Les métriques sont écrites dans `reports/models/`, les modèles dans `models/`. Le script estime aussi le groupe NOVA des produits sans liste d'ingrédients.
+Transformer (étape 7, sur Google Colab) :
+
+```bash
+uv run python -m nutrilys.models.export   # données pour Colab -> data/processed/colab/
+```
+
+Le notebook `notebooks/colab/06_camembert_colab.ipynb` est à ouvrir dans Google Colab (GPU). Il renvoie les prédictions (`data/processed/predictions/`) et les métriques (`reports/models/`), comparées ensuite dans `notebooks/06_transformer.ipynb`.
+
+Quatre tâches (NOVA et Nutri-Score, chacun avec un scénario « texte seul » et un scénario de contrôle), deux modèles (TF-IDF + régression logistique, TF-IDF + XGBoost). XGBoost n'est entraîné que sur les scénarios de contrôle, seuls cas où il fait mieux que la régression logistique, et sur 50 000 produits au plus (`--max-train`) ; il est évalué sur le même jeu de test complet. Les métriques sont écrites dans `reports/models/`, les modèles dans `models/`. Le script estime aussi le groupe NOVA des produits sans liste d'ingrédients.
 
 Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque étape) et `docs/data_dictionary.md` (description de chaque colonne). Le notebook `notebooks/01_qualite_donnees.ipynb` présente ces résultats.
+
+## Application
+
+```bash
+uv run python -m nutrilys.app.build      # table légère de l'application (une fois, après les étapes précédentes)
+uv run streamlit run app/app.py          # ouvre l'application dans le navigateur
+```
+
+Quatre pages : **Accueil** (recherche et chiffres clés), **Explorer** (recherche par nom, marque ou code-barres, filtres par rayon, marque, Nutri-Score, NOVA, bio et controverse), **Analyses** (principaux graphiques), **Prédire** (estimation de NOVA ou du Nutri-Score à partir d'une description, avec les mots qui ont pesé). Chaque produit a sa **fiche** : valeurs nutritionnelles, scores, additifs et signaux de controverse expliqués.
 
 ## Analyses
 
@@ -73,6 +90,7 @@ Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque é
 | `03_bio_vs_conventionnel` | Bio contre conventionnel à catégorie égale : tests par sous-groupe, taux standardisés |
 | `04_controverses` | Cinq signaux de controverse, additifs à risque, rappels, marques |
 | `05_baseline` | Prédiction de NOVA et du Nutri-Score : modèles de référence, erreurs, estimation NOVA |
+| `06_transformer` | CamemBERT face aux modèles de référence : scores, test de McNemar, choix du modèle |
 
 Les notebooks s'ouvrent dans VS Code avec le kernel `.venv`. Les figures interactives sont enregistrées dans `reports/figures/`.
 
@@ -96,7 +114,7 @@ nutrilys/
 │   ├── analysis/          # statistiques, controverses, bio
 │   ├── models/            # baseline, transformer, évaluation
 │   └── viz/               # thème et graphiques communs
-├── app/                   # application Streamlit
+├── app/                   # application Streamlit (app.py et views/)
 ├── models/                # modèles entraînés, ignoré par git
 ├── reports/figures/
 └── tests/
@@ -118,7 +136,7 @@ nutrilys/
 | 3 | Qualité nutritionnelle | Fait |
 | 4 | Bio vs conventionnel | Fait |
 | 5 | Controverses | Fait |
-| 6 | Modèles baseline | En cours |
-| 7 | Modèle transformer | À faire |
-| 8 | Web app | À faire |
+| 6 | Modèles baseline | Fait |
+| 7 | Modèle transformer | Fait |
+| 8 | Web app | En cours |
 | 9 | Finalisation | À faire |

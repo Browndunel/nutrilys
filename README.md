@@ -52,6 +52,16 @@ uv run python -m nutrilys.data.clean      # table de référence -> data/process
 uv run python -m nutrilys.analysis.controversies   # additifs, rappels, produits signalés
 ```
 
+## Modèles
+
+```bash
+uv run python -m nutrilys.models.baseline --sample 50000   # essai rapide
+uv run python -m nutrilys.models.baseline --models lr      # régression logistique, 4 tâches
+uv run python -m nutrilys.models.baseline --tasks nova_full nutriscore_full --models xgb
+```
+
+Quatre tâches (NOVA et Nutri-Score, chacun avec un scénario « texte seul » et un scénario de contrôle), deux modèles (TF-IDF + régression logistique, TF-IDF + XGBoost). XGBoost n'est entraîné que sur les scénarios de contrôle, seuls cas où il fait mieux que la régression logistique. Les métriques sont écrites dans `reports/models/`, les modèles dans `models/`. Le script estime aussi le groupe NOVA des produits sans liste d'ingrédients.
+
 Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque étape) et `docs/data_dictionary.md` (description de chaque colonne). Le notebook `notebooks/01_qualite_donnees.ipynb` présente ces résultats.
 
 ## Analyses
@@ -62,6 +72,7 @@ Le nettoyage écrit aussi `reports/cleaning_report.json` (effectifs à chaque é
 | `02_qualite_nutritionnelle` | Nutri-Score, NOVA, croisement des deux, additifs, nutriments par rayon |
 | `03_bio_vs_conventionnel` | Bio contre conventionnel à catégorie égale : tests par sous-groupe, taux standardisés |
 | `04_controverses` | Cinq signaux de controverse, additifs à risque, rappels, marques |
+| `05_baseline` | Prédiction de NOVA et du Nutri-Score : modèles de référence, erreurs, estimation NOVA |
 
 Les notebooks s'ouvrent dans VS Code avec le kernel `.venv`. Les figures interactives sont enregistrées dans `reports/figures/`.
 
@@ -106,8 +117,8 @@ nutrilys/
 | 2 | Nettoyage et table de référence | Fait |
 | 3 | Qualité nutritionnelle | Fait |
 | 4 | Bio vs conventionnel | Fait |
-| 5 | Controverses | En cours |
-| 6 | Modèles baseline | À faire |
+| 5 | Controverses | Fait |
+| 6 | Modèles baseline | En cours |
 | 7 | Modèle transformer | À faire |
 | 8 | Web app | À faire |
 | 9 | Finalisation | À faire |

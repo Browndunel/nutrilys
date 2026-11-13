@@ -39,6 +39,16 @@ ADDITIVES_PATH = PROCESSED_DIR / "additives.parquet"
 RECALLS_PATH = PROCESSED_DIR / "recalls.parquet"
 CONTROVERSIES_PATH = PROCESSED_DIR / "controversies.parquet"
 
+# Modélisation (étapes 6 et 7)
+SPLITS_PATH = PROCESSED_DIR / "splits.parquet"
+PREDICTIONS_DIR = PROCESSED_DIR / "predictions"
+MODEL_REPORTS_DIR = REPORTS_DIR / "models"
+NOVA_ESTIMATED_PATH = PREDICTIONS_DIR / "nova_estimated.parquet"
+TFIDF_MAX_FEATURES = 50_000
+TFIDF_MIN_DF = 5
+# XGBoost : seulement les termes les plus discriminants (chi²), 12 fois plus rapide
+XGB_TEXT_FEATURES = 5_000
+
 # Seuils des signaux de controverse
 MANY_ADDITIVES = 5  # « beaucoup d'additifs » à partir de ce nombre
 MIN_BRAND_PRODUCTS = 30  # produits notés minimum pour classer une marque

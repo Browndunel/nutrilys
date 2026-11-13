@@ -1,0 +1,10 @@
+{
+  "sample": null,
+  "tasks": [
+    "nova_full",
+    "nutriscore_full"
+  ],
+  "models": [
+    "xgb"
+  ]
+}

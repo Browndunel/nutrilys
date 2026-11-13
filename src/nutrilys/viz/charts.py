@@ -248,3 +248,92 @@ def effect_dots(
         margin=dict(t=125),
     )
     return fig
+
+
+# Rampe séquentielle bleue (du plus clair au plus foncé) pour les cartes de chaleur
+SEQUENTIAL_BLUE = ["#f4f8fd", "#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]
+
+
+def grouped_bars(
+    df: pd.DataFrame,
+    category: str,
+    series: str,
+    value: str,
+    colors: dict,
+    series_labels: dict | None = None,
+    title: str = "",
+    subtitle: str | None = None,
+    value_label: str = "",
+    value_format: str = ".2f",
+    value_range: tuple | None = None,
+) -> go.Figure:
+    """Barres groupées : une valeur par (catégorie, série), séries dans un ordre fixe."""
+    series_labels = series_labels or {}
+    order = list(dict.fromkeys(df[category]))
+    fig = go.Figure()
+    for key, color in colors.items():
+        sub = df[df[series] == key].set_index(category).reindex(order)
+        name = series_labels.get(key, str(key))
+        fig.add_bar(
+            x=order,
+            y=sub[value],
+            name=name,
+            marker_color=color,
+            text=[
+                f"{v:{value_format}}".replace(".", ",") if pd.notna(v) else "" for v in sub[value]
+            ],
+            textposition="outside",
+            textfont=dict(color=INK_SECONDARY, size=11),
+            hovertemplate=f"%{{x}}<br>{name} : %{{y:{value_format}}}<extra></extra>",
+            cliponaxis=False,
+        )
+    fig.update_layout(
+        barmode="group",
+        title=_title(title, subtitle),
+        height=460,
+        bargroupgap=0.08,
+        margin=dict(t=125),
+    )
+    fig.update_yaxes(title_text=value_label, range=list(value_range) if value_range else None)
+    fig.update_xaxes(showgrid=False)
+    return fig
+
+
+def confusion_heatmap(
+    shares: pd.DataFrame,
+    title: str = "",
+    subtitle: str | None = None,
+    x_title: str = "Classe prédite",
+    y_title: str = "Classe réelle",
+) -> go.Figure:
+    """Matrice de confusion en % de chaque classe réelle, valeurs écrites dans les cases."""
+    values = shares.to_numpy()
+    text_colors = [["#ffffff" if v >= 50 else INK_SECONDARY for v in row] for row in values]
+    fig = go.Figure(
+        go.Heatmap(
+            z=values,
+            x=[str(c) for c in shares.columns],
+            y=[str(r) for r in shares.index],
+            colorscale=[[i / (len(SEQUENTIAL_BLUE) - 1), c] for i, c in enumerate(SEQUENTIAL_BLUE)],
+            zmin=0,
+            zmax=100,
+            xgap=2,
+            ygap=2,
+            colorbar=dict(title=dict(text="%"), ticksuffix=" %", thickness=12),
+            hovertemplate="Réel %{y}, prédit %{x} : %{z:.1f} %<extra></extra>",
+        )
+    )
+    for i, row in enumerate(values):
+        for j, v in enumerate(row):
+            fig.add_annotation(  # position par numéro de case sur les axes catégoriels
+                x=j,
+                y=i,
+                text=f"{v:.0f}",
+                showarrow=False,
+                font=dict(color=text_colors[i][j], size=13),
+            )
+    fig.update_layout(title=_title(title, subtitle), height=460, width=620)
+    # Axes catégoriels : sinon « 1 », « 2 »... seraient lus comme des nombres
+    fig.update_xaxes(title_text=x_title, showgrid=False, side="bottom", type="category")
+    fig.update_yaxes(title_text=y_title, showgrid=False, autorange="reversed", type="category")
+    return fig

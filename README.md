@@ -126,17 +126,3 @@ nutrilys/
 - [RappelConso](https://data.economie.gouv.fr/explore/dataset/rappelconso-v2-gtin-trie) (DGCCRF), rappels de produits avec code-barres.
 - Évaluations des additifs par l'EFSA et liste de l'ANSES, via la taxonomie des additifs d'Open Food Facts.
 
-## Avancement
-
-| Étape | Contenu | Statut |
-|---|---|---|
-| 0 | Mise en place | Fait |
-| 1 | Acquisition des données | Fait |
-| 2 | Nettoyage et table de référence | Fait |
-| 3 | Qualité nutritionnelle | Fait |
-| 4 | Bio vs conventionnel | Fait |
-| 5 | Controverses | Fait |
-| 6 | Modèles baseline | Fait |
-| 7 | Modèle transformer | Fait |
-| 8 | Web app | En cours |
-| 9 | Finalisation | À faire |

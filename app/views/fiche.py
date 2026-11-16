@@ -6,6 +6,13 @@ from nutrilys.analysis.nutrition import FOOD_GROUP_LABELS
 from nutrilys.app import state, ui
 from nutrilys.app.queries import product
 
+
+def _risk(ref, code: str) -> str:
+    """Libellé du risque EFSA d'un additif, « Non évalué » si absent."""
+    label = ref["risk_label"].get(code) if not ref.empty else None
+    return "Non évalué" if ui.is_missing(label) else str(label)
+
+
 code = st.query_params.get("code")
 if not code:
     st.info("Choisissez un produit dans l'explorateur pour afficher sa fiche.")
@@ -66,8 +73,7 @@ with right:
         rows = [
             {
                 "Additif": ref["name_fr"].get(c, c) if not ref.empty else c,
-                "Risque de surexposition (EFSA)": (ref["risk_label"].get(c) if not ref.empty
-                                                   else None) or "Non évalué",
+                "Risque de surexposition (EFSA)": _risk(ref, c),
             }
             for c in codes
         ]  # fmt: skip

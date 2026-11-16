@@ -20,7 +20,7 @@ from nutrilys.viz.theme import (
 
 INK_SOFT = "#4f5753"
 LINE = "#d9dcd6"
-ACCENT = "#2a78d6"
+ACCENT = "#279a52"
 
 NOVA_SHORT = {1: "brut ou peu transformé", 2: "ingrédient culinaire", 3: "transformé",
               4: "ultra-transformé"}  # fmt: skip
